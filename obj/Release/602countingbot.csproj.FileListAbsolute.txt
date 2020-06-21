@@ -1,0 +1,5 @@
+C:\Users\wdsis\source\repos\602countingbot\602countingbot\bin\Release\602countingbot.exe.config
+C:\Users\wdsis\source\repos\602countingbot\602countingbot\bin\Release\602countingbot.exe
+C:\Users\wdsis\source\repos\602countingbot\602countingbot\bin\Release\602countingbot.pdb
+C:\Users\wdsis\source\repos\602countingbot\602countingbot\obj\Release\602countingbot.exe
+C:\Users\wdsis\source\repos\602countingbot\602countingbot\obj\Release\602countingbot.pdb

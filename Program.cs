@@ -132,7 +132,7 @@ namespace _602countingbot
         {
             Console.Write("Press enter when the 602 race starts (press enter in opening of sm64)"); //Livesplit server acts weird when started and livesplit is not already running
             Console.ReadLine();
-            string CurrentProgress = "";
+            //string CurrentProgress = "";
             IrcClient ircClient = new IrcClient("irc.chat.twitch.tv", 6667, _user, _oauth, _channel); // Sets up the connection with the twitch chat
 
             PingSender ping = new PingSender(ircClient); // Sends a ping every 5 minutes; otherwise twitch will kick the bot
