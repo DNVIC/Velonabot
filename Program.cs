@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using _602countingbot;
 using System.IO;
 
+
 namespace _602countingbot
 {
     
@@ -20,29 +21,42 @@ namespace _602countingbot
         private static IPAddress _ip;
 
         
-        public static void assignStrings()
+        private static void assignStrings()
         {
-            Console.Write("Insert bot username ");
-            string user = Console.ReadLine();
+            LoginCredentials loginCredentials = new LoginCredentials();
 
-            Console.Write("Insert bot oauth ID ");
-            string pass = Console.ReadLine();
+            try
+            {
+                loginCredentials = LoginCredentials.GetCredentials(@"C:\602counting\credentials.json");
+            } 
+            catch
+            {
+                Console.Write("Insert bot username ");
+                loginCredentials.user = Console.ReadLine();
+
+                Console.Write("Insert bot oauth ID ");
+                loginCredentials.oauth = Console.ReadLine();
+
+                Console.Write("Insert channel to autocount in ");
+                loginCredentials.channel = Console.ReadLine();
+
+                Console.Write("Insert your twitch username ");
+                loginCredentials.username = Console.ReadLine();
+
+                Console.Write("Insert IP from LiveSplit Server ");
+                loginCredentials.ip = Console.ReadLine();
+
+                LoginCredentials.SaveCredentials(loginCredentials, @"C:\602counting\credentials.json");
+            }
+
             
-            Console.Write("Insert channel to autocount in ");
-            string chan = Console.ReadLine();
-            
-            Console.Write("Insert your twitch username ");
-            string UserName = Console.ReadLine();
-            
-            Console.Write("Insert IP from LiveSplit Server ");
-            string ip = Console.ReadLine();
 
 
-            _ip = IPAddress.Parse(ip);
-            _user = user;
-            _oauth = pass;
-            _channel = chan;
-            _username = UserName;
+            _ip = IPAddress.Parse(loginCredentials.ip);
+            _user = loginCredentials.user;
+            _oauth = loginCredentials.oauth;
+            _channel = loginCredentials.channel;
+            _username = loginCredentials.username;
         }
 
         static async Task Main(string[] args)
