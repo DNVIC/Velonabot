@@ -1,0 +1,6 @@
+C:\Users\wdsis\source\repos\602countingbot\602countingbot\bin\Debug\602countingbot.exe.config
+C:\Users\wdsis\source\repos\602countingbot\602countingbot\bin\Debug\602countingbot.exe
+C:\Users\wdsis\source\repos\602countingbot\602countingbot\bin\Debug\602countingbot.pdb
+C:\Users\wdsis\source\repos\602countingbot\602countingbot\obj\Debug\602countingbot.csprojAssemblyReference.cache
+C:\Users\wdsis\source\repos\602countingbot\602countingbot\obj\Debug\602countingbot.exe
+C:\Users\wdsis\source\repos\602countingbot\602countingbot\obj\Debug\602countingbot.pdb
