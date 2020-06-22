@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
-using _602countingbot;
 using System.IO;
 
 
@@ -86,14 +83,7 @@ namespace _602countingbot
                     //Print information that means we are good
                     Console.WriteLine("Socket connected to -> {0} ", sender.RemoteEndPoint.ToString());
 
-                    /*
-                    //Creating sent message
-                    byte[] messageSent = Encoding.ASCII.GetBytes("starttimer\r\n");
-                    //Sending
-                    int byteSent = sender.Send(messageSent);
-                    messageSent = Encoding.ASCII.GetBytes("split\r\n");
-                    int byte2Sent = sender.Send(messageSent);
-                    */
+                    
 
                     await SplitLevelChecker(sender, ByteBuffer);
                     //sender.Shutdown(SocketShutdown.Both);
@@ -116,22 +106,6 @@ namespace _602countingbot
             {
                 Console.WriteLine(e.ToString());
             }
-        }
-        static void SendCommand(Socket s, string Command)
-        {
-            byte[] spinx = Encoding.ASCII.GetBytes(Command + "\r\n");
-            s.Send(spinx);   
-        }
-
-        static string ReceiveCommand(Socket s, byte[] Buffer)
-        {
-            
-            int recv = s.Receive(Buffer);
-
-            
-
-
-            return Encoding.ASCII.GetString(Buffer, 0, recv);
         }
         static string SendAndReceiveCommand(Socket s, string Command, byte[] Buffer)
         {
@@ -161,55 +135,20 @@ namespace _602countingbot
 
                 string ReceivedCommand = SendAndReceiveCommand(sender, "getsplitindex", ByteBuffer); // Gets the current split from livesplit
                 string SplitID = index[int.Parse(ReceivedCommand)]; 
-                Console.WriteLine(int.Parse(SplitID));
-                Console.WriteLine(int.Parse(ReceivedCommand));
-                Console.WriteLine(SplitID);
+                //Console.WriteLine(int.Parse(SplitID)); debug statements to find out what went wrong
+                //Console.WriteLine(int.Parse(ReceivedCommand));
+                //Console.WriteLine(SplitID);
 
 
                 StarCount = int.Parse(SplitID);
-                Console.WriteLine(StarCount);
+                Console.WriteLine("Current Star Count " + StarCount);
                 if (StarCount != PreviousStarCount)
                 {
                     ircClient.SendPublicChatMessage("!set " + _username + " " + (StarCount).ToString());
-                    //ircClient.SendPublicChatMessage("!add " + "DNVIC " + (StarCount - PreviousStarCount).ToString()); Previous version; Putting here in case current doesnt work
-
-                    switch (StarCount)
-                    {
-                        case 120:
-                            ircClient.SendPublicChatMessage(_username + ", based on their livesplit progress, should have just now finished Super Mario 64. If their starcount is not at 120 after a minute, please correct their total. This message was made by a bot.");
-                            break;
-                        case 241:
-                            ircClient.SendPublicChatMessage(_username + ", based on their livesplit progress, should have just now started Super Mario Sunshine. If their starcount is not at 241 after a minute, please correct their total. This message was made by a bot.");
-                            break;
-                        case 360:
-                            ircClient.SendPublicChatMessage(_username + ", based on their livesplit progress, should have just now finished Super Mario Sunshine. If their starcount is not at 360 after a minute, please correct their total. This message was made by a bot.");
-                            break;
-                        case 601:
-                            ircClient.SendPublicChatMessage(_username + ", based on their livesplit progress, is now on The Perfect Run. If their starcount is not at 601 after a minute, please correct their total. They will manually enter the last star. This message was made by a bot.");
-                            break;
-                        default:
-                            break;
-                    }
-                    /*if (StarCount == 120)   //Switched from if/else to switch/case. Keeping for future reference.
-                    {
-                        ircClient.SendPublicChatMessage(_username + ", based on their livesplit progress, should have just now finished Super Mario 64. If their starcount is not at 120 after a minute, please correct their total. This message was made by a bot.");
-                    } else if(StarCount == 240)
-                    {
-                        ircClient.SendPublicChatMessage(_username + ", based on their livesplit progress, should have just now finished Super Mario Galaxy. If their starcount is not at 240 after a minute, please correct their total. This message was made by a bot.");
-                    } else if(StarCount == 360)
-                    {
-                        ircClient.SendPublicChatMessage(_username + ", based on their livesplit progress, should have just now finished Super Mario Sunshine. If their starcount is not at 360 after a minute, please correct their total. This message was made by a bot.");
-                    } else if(StarCount == 601)
-                    {
-                        ircClient.SendPublicChatMessage(_username + ", based on their livesplit progress, is now on The Perfect Run. If their starcount is not at 601 after a minute, please correct their total. They will manually enter the last star. This message was made by a bot.");
-                    }*/
                 }
                 PreviousStarCount = StarCount;
 
-                /*if(SplitID != "!!!!") //Old if statement from SMR program
-                {
-                    CurrentProgress = SplitID;
-                }*/
+                
 
                 //Console.WriteLine("Current Progress" + CurrentProgress);
                 //ircClient.SendPublicChatMessage(CurrentProgress);
