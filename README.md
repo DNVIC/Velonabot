@@ -5,7 +5,7 @@ A bot for automatically counting in the 602
 Dependencies:
 System.Text.Json
 
-FUTURE PLANS:
+## FUTURE PLANS:
 Support for the 1120 (will have to contact odyssey runners to make splits)
 
 Client/Server Model (clients interact with a server which has the bot instead of the client hosting the bot itself)
