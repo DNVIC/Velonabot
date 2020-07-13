@@ -13,6 +13,6 @@ Support for the 1120 (will have to contact odyssey runners to make splits)
 
 Client/Server Model (clients interact with a server which has the bot instead of the client hosting the bot itself)
 
-Directly integrating the program with livesplit with a plugin (livesplit server causes the program to crash when you switch layouts)
+Directly integrating the program with livesplit with a component (livesplit server causes the program to crash when you switch layouts)
 
 
