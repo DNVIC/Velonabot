@@ -1,15 +1,13 @@
 ﻿using System.IO;
 using System.Text.Json;
 
-namespace _602countingbot
+namespace Velonabot
 {
     public class LoginCredentials
     {
         public string user { get; set; }
         public string oauth { get; set; }
         public string channel { get; set; }
-        public string username { get; set; }
-        public string ip { get; set; }
 
         public static void SaveCredentials(LoginCredentials credentials, string fileName)
         {
@@ -21,6 +19,6 @@ namespace _602countingbot
             string jsonstring = File.ReadAllText(fileName);
             return JsonSerializer.Deserialize<LoginCredentials>(jsonstring);
         }
-
+        
     }
 }

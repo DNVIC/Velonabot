@@ -4,9 +4,11 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
+using System.Linq;
+using System.Collections.Generic;
 
 
-namespace _602countingbot
+namespace Velonabot
 {
     
     class Program
@@ -14,17 +16,22 @@ namespace _602countingbot
         private static string _user;
         private static string _oauth;
         private static string _channel;
-        private static string _username;
-        private static IPAddress _ip;
 
-        
+        public static string[] moderators = { "thestibblr", "jakecn", "dnvic", "velonathon", "bgp1", "dnvicalt" };
+
+        public static List<CustomCommands> CommandsList = new List<CustomCommands>();
+        public static List<CustomCommands> ModeratorCommandsList = new List<CustomCommands>();
+        public static List<CustomCommands> UserCommandsList = new List<CustomCommands>();
+
+        private static string CommandLocation = @"C:\Velonathon\BotCommands\Commands.json";
+
         private static void assignStrings()
         {
             LoginCredentials loginCredentials = new LoginCredentials();
 
             try
             {
-                loginCredentials = LoginCredentials.GetCredentials(@"C:\602counting\credentials.json");
+                loginCredentials = LoginCredentials.GetCredentials(@"C:\Velonathon\credentials.json");
             } 
             catch
             {
@@ -37,125 +44,199 @@ namespace _602countingbot
                 Console.Write("Insert channel to autocount in ");
                 loginCredentials.channel = Console.ReadLine();
 
-                Console.Write("Insert your twitch username ");
-                loginCredentials.username = Console.ReadLine();
-
-                Console.Write("Insert IP from LiveSplit Server ");
-                loginCredentials.ip = Console.ReadLine();
-
-                LoginCredentials.SaveCredentials(loginCredentials, @"C:\602counting\credentials.json");
+                LoginCredentials.SaveCredentials(loginCredentials, @"C:\Velonathon\credentials.json");
             }
 
             
 
 
-            _ip = IPAddress.Parse(loginCredentials.ip);
             _user = loginCredentials.user;
             _oauth = loginCredentials.oauth;
             _channel = loginCredentials.channel;
-            _username = loginCredentials.username;
         }
 
         static async Task Main(string[] args)
         {
             assignStrings();
-            await ExecuteClient();
+            await Task.WhenAll(LoadCommands(), ExecuteClient());
         }
         static async Task ExecuteClient()
         {
-            // Base socket code taken from https://geeksforgeeks.org/socket-programming-in-c-sharp/
-            try
+            
+            IrcClient ircClient = new IrcClient("irc.chat.twitch.tv", 6667, _user, _oauth, _channel);
+            PingSender ping = new PingSender(ircClient);
+            while (true)
             {
-                IPHostEntry ipHost = Dns.GetHostEntry(Dns.GetHostName());
-                IPAddress ipaddr = _ip;
-                IPEndPoint localEndPoint = new IPEndPoint(ipaddr, 16834);
-                Console.WriteLine(ipaddr.ToString());
-                Socket sender = new Socket(ipaddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                string message = ircClient.ReadMessage();
+                Console.WriteLine(message);
 
-                try
+
+                if (message.Contains("PRIVMSG"))
                 {
-                    //Connect socket to endpoint
-                    sender.Connect(localEndPoint);
-                    byte[] ByteBuffer = new byte[1024];
+                    int intIndexParseSign = message.IndexOf('!');
+                    string userName = message.Substring(1, intIndexParseSign - 1);
+                    intIndexParseSign = message.IndexOf(" :");
+                    message = message.Substring(intIndexParseSign + 2);
 
+                    //Mod Commands
+                    if (moderators.Contains(userName))
+                    {
+                        await ModeratorCommands(userName, message, ircClient);
+                    }
+                    UserCommands(userName, message, ircClient);
 
-
-                    //Print information that means we are good
-                    Console.WriteLine("Socket connected to -> {0} ", sender.RemoteEndPoint.ToString());
 
                     
 
-                    await SplitLevelChecker(sender, ByteBuffer);
-                    //sender.Shutdown(SocketShutdown.Both);
-                    //sender.Close();
                 }
-                catch (ArgumentNullException ane)
-                {
-                    Console.WriteLine("ArgumentNullException : {0}", ane.ToString());
-                }
-                catch (SocketException se)
-                {
-                    Console.WriteLine("SocketException : {0}", se.ToString());
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Unexpected Exception : {0}", e.ToString());
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.ToString());
+                //await Task.Delay(0);
             }
         }
-        static string SendAndReceiveCommand(Socket s, string Command, byte[] Buffer)
+        static async Task ModeratorCommands(string userName, string message, IrcClient irc)
         {
-            byte[] spinx = Encoding.ASCII.GetBytes(Command + "\r\n");
-            s.Send(spinx);
-            int recv = s.Receive(Buffer);
-            return Encoding.ASCII.GetString(Buffer, 0, recv);
-        }
-
-
-        private static async Task SplitLevelChecker(Socket sender, byte[] ByteBuffer )
-        {
-            Console.Write("Press enter when the 602 race starts (press enter in opening of sm64)"); //Livesplit server acts weird when started and livesplit is not already running
-            Console.ReadLine();
-            //string CurrentProgress = "";
-            IrcClient ircClient = new IrcClient("irc.chat.twitch.tv", 6667, _user, _oauth, _channel); // Sets up the connection with the twitch chat
-
-            PingSender ping = new PingSender(ircClient); // Sends a ping every 5 minutes; otherwise twitch will kick the bot
-            ping.Start();
-            int StarCount = 0; //star count is created outside of the while loops so that it is an external variable
-
-            int PreviousStarCount = 0; //used to calculate when the star count changes
-            string[] index = File.ReadAllLines(@"C:\602counting\index.txt");
-            while (true)
+            if (message.StartsWith("!hello"))
             {
-
-
-                string ReceivedCommand = SendAndReceiveCommand(sender, "getsplitindex", ByteBuffer); // Gets the current split from livesplit
-                string SplitID = index[int.Parse(ReceivedCommand)]; 
-                //Console.WriteLine(int.Parse(SplitID)); debug statements to find out what went wrong
-                //Console.WriteLine(int.Parse(ReceivedCommand));
-                //Console.WriteLine(SplitID);
-
-
-                StarCount = int.Parse(SplitID);
-                Console.WriteLine("Current Star Count " + StarCount);
-                if (StarCount != PreviousStarCount)
+                irc.SendPublicChatMessage("World!");
+            }
+            if (message.StartsWith("!addcom"))
+            {
+                var fmtstring = message.Substring(8);
+                var FirstSpaceIndex = fmtstring.IndexOf(' ');
+                var FirstString = fmtstring.Substring(0, FirstSpaceIndex);
+                foreach (CustomCommands com in CommandsList)
                 {
-                    ircClient.SendPublicChatMessage("!set " + _username + " " + (StarCount).ToString());
+                    if (FirstString == com.CommandName)
+                    {
+                        irc.SendPublicChatMessage("That command already exists. Try again");
+                        goto End; // Ends the if statement if the command already exists.
+                    }
                 }
-                PreviousStarCount = StarCount;
+                var SecondString = fmtstring.Substring(FirstSpaceIndex + 1);
+                CustomCommands command = new CustomCommands();
+                command.CommandName = FirstString;
+                command.CommandResponse = SecondString;
+                command.IsModCommand = false;
+                CommandsList.Add(command);
+                CustomCommands.SaveCommands(CommandsList, CommandLocation);
+                irc.SendPublicChatMessage("Command added!");
+                End:;
+            }
+            if (message.StartsWith("!delcom"))
+            {
+                var fmtstring = message.Substring(8);
+                var foundCommand = false;
+                foreach(CustomCommands command in CommandsList)
+                {
 
-                
-
-                //Console.WriteLine("Current Progress" + CurrentProgress);
-                //ircClient.SendPublicChatMessage(CurrentProgress);
-
-                await Task.Delay(1500); //1.5 second break between messages for performance reasons
+                    if(command.CommandName == fmtstring)
+                    {
+                        foundCommand = true;
+                        CommandsList.Remove(command);
+                        CustomCommands.SaveCommands(CommandsList, CommandLocation);
+                        irc.SendPublicChatMessage("Command Removed!");
+                        break;
+                    }
+                }
+                if(!foundCommand)
+                {
+                    irc.SendPublicChatMessage("No command with that name exists");
+                }
+            }
+            if (message.StartsWith("!editcom"))
+            {
+                var fmtstring = message.Substring(9);
+                var FirstSpaceIndex = fmtstring.IndexOf(' ');
+                var FirstString = fmtstring.Substring(0, FirstSpaceIndex);
+                var foundCommand = false;
+                foreach (CustomCommands com in CommandsList)
+                {
+                    if (FirstString == com.CommandName)
+                    {
+                        var SecondString = fmtstring.Substring(FirstSpaceIndex + 1);
+                        com.CommandResponse = SecondString;
+                        CustomCommands.SaveCommands(CommandsList, CommandLocation);
+                        foundCommand = true;
+                        irc.SendPublicChatMessage("Command Edited!");
+                        break;
+                    }
+                }
+                if (!foundCommand)
+                {
+                    irc.SendPublicChatMessage("No command with that name exists");
+                }
             }
         }
-        
+        static void UserCommands(string userName, string message, IrcClient irc)
+        {
+            if (message.StartsWith("!hola"))
+            {
+                irc.SendPublicChatMessage("Mundo!");
+            }
+            if (message.StartsWith("!commands"))
+            {
+                List<string> Commands = new List<string>();
+                foreach(CustomCommands command in CommandsList)
+                {
+                    Commands.Add(command.CommandName);
+                }
+                string finalmsg = "The current commands are:";
+                for(var i = 0; i < Commands.Count; i++)
+                {
+                    finalmsg += " ";
+                    if(i == Commands.Count - 1)
+                    {
+                        finalmsg += Commands[i];
+                    } else
+                    {
+                        finalmsg += Commands[i];
+                        finalmsg += ",";
+                    }
+                    
+                }
+                irc.SendPublicChatMessage(finalmsg);
+            }
+            foreach(CustomCommands command in UserCommandsList)
+            {
+                if(message.StartsWith(command.CommandName))
+                {
+                    string finalmsg = command.CommandResponse;
+                    if(finalmsg.Contains("$USER"))
+                    {
+                        finalmsg = finalmsg.Replace("$USER", userName);
+                        Console.WriteLine(userName);
+                    }
+                    if (finalmsg.Contains("$COUNTER"))
+                    {
+                        finalmsg = finalmsg.Replace("$COUNTER", (command.Counter + 1).ToString());
+                        command.Counter += 1;
+                        CustomCommands.SaveCommands(CommandsList, CommandLocation);
+                    }
+                    Console.WriteLine(finalmsg);
+                    irc.SendPublicChatMessage(finalmsg);
+                    break;
+                }
+            }
+
+        }
+        static async Task LoadCommands()
+        {
+            while(true)
+            {
+                CommandsList = CustomCommands.LoadCommands(CommandLocation);
+                for( int i = 0; i < CommandsList.Count; i++)
+                {
+                    if(CommandsList[i].IsModCommand)
+                    {
+                        ModeratorCommandsList.Add(CommandsList[i]);
+                    } 
+                    else
+                    {
+                        UserCommandsList.Add(CommandsList[i]);
+                    }
+                }
+                await Task.Delay(5000);
+            }
+            
+        }
     }
 }

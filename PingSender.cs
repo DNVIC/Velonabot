@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace _602countingbot
+namespace Velonabot
 {
     /*
     * Class that sends PING to irc server every 5 minutes

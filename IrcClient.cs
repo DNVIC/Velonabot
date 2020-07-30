@@ -2,7 +2,7 @@
 using System.Net.Sockets;
 using System.IO;
 
-namespace _602countingbot
+namespace Velonabot
 {
     // Reference: https://www.youtube.com/watch?v=Ss-OzV9aUZg
     public class IrcClient
